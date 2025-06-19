@@ -59,14 +59,14 @@ export default function EventViewPage() {
     try {
       // Load event details
       const eventData = await eventService.getEvent(eventId);
-      
+
       // Transform Event to EventDetails format
       const eventDetails: EventDetails = {
         ...eventData,
         registeredCount: eventData.registered,
         checkedInCount: 0, // Will be updated when stats are loaded
       };
-      
+
       setEvent(eventDetails);
     } catch (err) {
       console.error('Failed to load event data:', err);
