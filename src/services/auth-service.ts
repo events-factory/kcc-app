@@ -59,7 +59,7 @@ export const authService = {
       // Make a direct fetch request to login endpoint
       const response = await fetch(
         `${
-          process.env.NEXT_PUBLIC_API_URL || 'https://api.kcc.eventsfactory.rw/'
+          process.env.NEXT_PUBLIC_API_URL || 'https://api.kcc.eventsfactory.rw'
         }/auth/login`,
         {
           method: 'POST',
