@@ -134,7 +134,7 @@ export default function EventsPage() {
           <div className="p-8 text-center">
             <p className="text-gray-500">No events found</p>
             <Button
-              variant="link"
+              variant="ghost"
               className="mt-2 text-blue-500"
               onClick={handleOpenModal}
             >

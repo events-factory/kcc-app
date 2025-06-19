@@ -38,11 +38,12 @@ let attendees = [
 // GET attendance statistics for an event
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return authMiddleware(req, async (request) => {
     try {
-      const eventId = params.id;
+      const resolvedParams = await params;
+      const eventId = resolvedParams.id;
 
       // Get attendees for this event
       const eventAttendees = attendees.filter(

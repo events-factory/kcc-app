@@ -27,10 +27,11 @@ let events = [
 // GET a specific event by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const event = events.find((e) => e.id === params.id);
+    const resolvedParams = await params;
+    const event = events.find((e) => e.id === resolvedParams.id);
 
     if (!event) {
       return NextResponse.json({ message: 'Event not found' }, { status: 404 });
@@ -49,11 +50,12 @@ export async function GET(
 // PUT (update) a specific event by ID
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return authMiddleware(req, async (request) => {
     try {
-      const eventId = params.id;
+      const resolvedParams = await params;
+      const eventId = resolvedParams.id;
       const eventIndex = events.findIndex((e) => e.id === eventId);
 
       if (eventIndex === -1) {
@@ -88,11 +90,12 @@ export async function PUT(
 // DELETE a specific event by ID
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return authMiddleware(req, async (request) => {
     try {
-      const eventId = params.id;
+      const resolvedParams = await params;
+      const eventId = resolvedParams.id;
       const eventIndex = events.findIndex((e) => e.id === eventId);
 
       if (eventIndex === -1) {

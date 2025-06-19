@@ -166,7 +166,9 @@ export default function UploadPage() {
         
         if (jsonData.length > 0) {
           // First row contains headers
-          const headers = jsonData[0] as string[];
+          const headers = Object.keys(jsonData[0]).length > 0 
+            ? Object.values(jsonData[0]).map(String) 
+            : [];
           setFileColumns(headers);
           
           // Try to auto-map columns
@@ -174,7 +176,7 @@ export default function UploadPage() {
           
           // Process data rows (limited to 5 rows for preview)
           const rows = jsonData.slice(1, 6).map(row => {
-            const rowData = row as Array<string | number>;
+            const rowData = Object.values(row);
             return headers.reduce<Record<string, string | number>>((obj, header, index) => {
               obj[header] = rowData[index] || '';
               return obj;

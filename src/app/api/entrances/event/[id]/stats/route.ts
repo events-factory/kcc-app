@@ -43,11 +43,12 @@ const entrances = [
 // GET entrance statistics for an event (protected)
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return authMiddleware(req, async (request) => {
     try {
-      const eventId = params.id;
+      const resolvedParams = await params;
+      const eventId = resolvedParams.id;
 
       // Get entrances for this event
       const eventEntrances = entrances.filter(

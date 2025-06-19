@@ -59,7 +59,15 @@ export default function EventViewPage() {
     try {
       // Load event details
       const eventData = await eventService.getEvent(eventId);
-      setEvent(eventData);
+      
+      // Transform Event to EventDetails format
+      const eventDetails: EventDetails = {
+        ...eventData,
+        registeredCount: eventData.registered,
+        checkedInCount: 0, // Will be updated when stats are loaded
+      };
+      
+      setEvent(eventDetails);
     } catch (err) {
       console.error('Failed to load event data:', err);
       setError('Failed to load event data. Please try again later.');
@@ -109,6 +117,7 @@ export default function EventViewPage() {
     if (user) {
       fetchEventData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId, user]);
 
   // Load stats separately after event data is loaded
@@ -116,6 +125,7 @@ export default function EventViewPage() {
     if (event && user) {
       fetchEntranceStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, user]);
 
   const handleRefreshData = () => {
@@ -139,7 +149,7 @@ export default function EventViewPage() {
       <div className="text-center py-10">
         <h2 className="text-xl font-semibold">Event not found</h2>
         <Link href="/dashboard/events">
-          <Button variant="link" className="mt-4">
+          <Button variant="ghost" className="mt-4">
             <FiArrowLeft className="mr-2" /> Back to Events
           </Button>
         </Link>
@@ -249,7 +259,7 @@ export default function EventViewPage() {
               <p className="text-gray-500">No entrance data available</p>
               {statsError && (
                 <Button
-                  variant="link"
+                  variant="ghost"
                   className="mt-2 text-blue-500"
                   onClick={fetchEntranceStats}
                 >
