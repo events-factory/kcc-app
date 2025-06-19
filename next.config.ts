@@ -25,11 +25,11 @@ const nextConfig: NextConfig = {
             value: '86400',
           },
         ],
-        eslint: {
-          ignoreDuringBuilds: true, // Ignore ESLint during build
-        },
       },
     ];
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
