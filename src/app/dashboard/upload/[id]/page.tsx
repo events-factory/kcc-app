@@ -24,11 +24,11 @@ import { Event } from '@/types';
 type PreviewRow = Record<string, string | number | null>;
 
 // Define required fields for attendees
-type RequiredField = 'firstName' | 'lastName' | 'email';
-type OptionalField = 'badgeId';
+type RequiredField = 'badgeId';
+type OptionalField = 'firstName' | 'lastName' | 'email';
 
-const REQUIRED_FIELDS: RequiredField[] = ['firstName', 'lastName', 'email'];
-const OPTIONAL_FIELDS: OptionalField[] = ['badgeId'];
+const REQUIRED_FIELDS: RequiredField[] = ['badgeId'];
+const OPTIONAL_FIELDS: OptionalField[] = ['firstName', 'lastName', 'email'];
 const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
 export default function UploadPage() {
@@ -95,7 +95,13 @@ export default function UploadPage() {
           const autoMapping: Record<string, string> = {};
           headers.forEach((header) => {
             const lowerHeader = header.toLowerCase();
-            if (lowerHeader.includes('first') || lowerHeader === 'firstname') {
+            if (
+              lowerHeader.includes('badge') ||
+              lowerHeader.includes('id') ||
+              lowerHeader === 'badgeid'
+            ) {
+              autoMapping.badgeId = header;
+            } else if (lowerHeader.includes('first') || lowerHeader === 'firstname') {
               autoMapping.firstName = header;
             } else if (
               lowerHeader.includes('last') ||
@@ -104,11 +110,6 @@ export default function UploadPage() {
               autoMapping.lastName = header;
             } else if (lowerHeader.includes('email')) {
               autoMapping.email = header;
-            } else if (
-              lowerHeader.includes('badge') ||
-              lowerHeader.includes('id')
-            ) {
-              autoMapping.badgeId = header;
             }
           });
 
@@ -200,6 +201,16 @@ export default function UploadPage() {
             REQUIRED_FIELDS.forEach((field) => {
               const column = fieldMapping[field];
               if (column && rowData[column]) {
+                if (field === 'badgeId') {
+                  attendeeData.badgeId = String(rowData[column]).trim();
+                }
+              }
+            });
+
+            // Map optional fields
+            OPTIONAL_FIELDS.forEach((field) => {
+              const column = fieldMapping[field];
+              if (column && rowData[column]) {
                 if (field === 'firstName') {
                   attendeeData.firstName = String(rowData[column]).trim();
                 } else if (field === 'lastName') {
@@ -210,17 +221,7 @@ export default function UploadPage() {
               }
             });
 
-            // Map optional fields
-            OPTIONAL_FIELDS.forEach((field) => {
-              const column = fieldMapping[field];
-              if (column && rowData[column]) {
-                if (field === 'badgeId') {
-                  attendeeData.badgeId = String(rowData[column]).trim();
-                }
-              }
-            });
-
-            // Validate required fields - firstName, lastName, email are required
+            // Validate required fields - badgeId is required
             const missingFields = REQUIRED_FIELDS.filter(
               (field) => !attendeeData[field]
             );

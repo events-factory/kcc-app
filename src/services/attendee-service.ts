@@ -2,10 +2,10 @@ import { apiClient } from '@/lib/api-client';
 import { Attendee } from '@/types';
 
 export interface CreateAttendeeData {
-  badgeId?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  badgeId: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   eventId: string;
   phone?: string;
   company?: string;
@@ -133,13 +133,13 @@ export const attendeeService = {
       try {
         // Map the data to match backend expectations
         const backendData = {
-          firstName: attendeeData.firstName,
-          lastName: attendeeData.lastName,
-          email: attendeeData.email,
+          badgeId: attendeeData.badgeId,
+          firstName: attendeeData.firstName || '',
+          lastName: attendeeData.lastName || '',
+          email: attendeeData.email || '',
           eventId: parseInt(eventId), // Backend expects number based on the screenshot
           phone: attendeeData.phone || '',
           organization: attendeeData.company || '', // Backend expects 'organization', not 'company'
-          ...(attendeeData.badgeId && { badgeId: attendeeData.badgeId }),
         };
 
         const createdAttendee = await apiClient.post<Attendee>(

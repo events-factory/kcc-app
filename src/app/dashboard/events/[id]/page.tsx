@@ -210,7 +210,9 @@ export default function EventViewPage() {
   const checkedInDisplay = attendeeCounts.checkedIn;
   const attendeeLimit = event?.attendeeLimit || 0;
   const checkInRate =
-    attendeeLimit > 0 ? Math.round((checkedInDisplay / attendeeLimit) * 100) : 0;
+    attendeeLimit > 0
+      ? Math.round((checkedInDisplay / attendeeLimit) * 100)
+      : 0;
 
   // Determine background color for check-in rate card
   let checkInBg = 'bg-green-100/70';
