@@ -109,7 +109,10 @@ export function CheckInActivityChart({ eventId }: CheckInActivityChartProps) {
         console.error('Failed to load check-in activity:', err);
 
         // Handle authentication errors
-        if (err instanceof Error && err.message.includes('Authentication required')) {
+        if (
+          err instanceof Error &&
+          err.message.includes('Authentication required')
+        ) {
           logout();
         } else {
           setError('Failed to load check-in activity data.');
