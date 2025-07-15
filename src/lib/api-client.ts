@@ -1,7 +1,7 @@
 // Simple API client for handling all API requests with authentication
 import { getAuthToken } from './auth-utils';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.kcc.eventsfactory.rw';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 /**
  * API client for making HTTP requests with authentication

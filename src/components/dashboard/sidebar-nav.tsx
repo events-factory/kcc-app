@@ -7,7 +7,6 @@ import {
   FiHome,
   FiCalendar,
   FiUpload,
-  FiUsers,
   FiSettings,
   FiLogOut,
 } from 'react-icons/fi';
@@ -21,13 +20,33 @@ export function SidebarNav({ className }: SidebarNavProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
 
-  const navItems = [
-    { href: '/dashboard', icon: FiHome, label: 'Dashboard' },
-    { href: '/dashboard/events', icon: FiCalendar, label: 'Events' },
-    { href: '/dashboard/upload', icon: FiUpload, label: 'Upload' },
-    { href: '/dashboard/attendees', icon: FiUsers, label: 'Attendees' },
-    { href: '/dashboard/settings', icon: FiSettings, label: 'Settings' },
-  ];
+  // Extract event ID from pathname if we're in an event-specific route
+  const eventIdMatch = pathname.match(
+    /\/dashboard\/(?:events|upload|settings)\/(\d+)/
+  );
+  const eventId = eventIdMatch ? eventIdMatch[1] : null;
+
+  // Show full menu when we have an event ID in the URL
+  const navItems = eventId
+    ? [
+        {
+          href: `/dashboard/events/${eventId}`,
+          icon: FiHome,
+          label: 'Dashboard',
+        },
+        { href: '/dashboard/events', icon: FiCalendar, label: 'All Events' },
+        {
+          href: `/dashboard/upload/${eventId}`,
+          icon: FiUpload,
+          label: 'Upload',
+        },
+        {
+          href: `/dashboard/settings/${eventId}`,
+          icon: FiSettings,
+          label: 'Settings',
+        },
+      ]
+    : [{ href: '/dashboard/events', icon: FiCalendar, label: 'Events' }];
 
   return (
     <nav className={cn('flex flex-col h-full', className)}>
