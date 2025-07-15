@@ -10,8 +10,8 @@ import authBg from '@/assets/auth-bg.jpg';
 import logo from '@/assets/logo.png';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@example.com'); // Pre-filled for debugging
-  const [password, setPassword] = useState('password123'); // Pre-filled for debugging
+  const [email, setEmail] = useState(''); // Pre-filled for debugging
+  const [password, setPassword] = useState(''); // Pre-filled for debugging
   const [error, setError] = useState('');
   const { login, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
         // Force a short delay to ensure token is properly saved before navigation
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/dashboard/events');
         }, 100);
       } else {
         setError('Invalid email or password');
@@ -159,16 +159,6 @@ export default function LoginPage() {
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
-            </div>
-
-            <div className="mt-4 text-center text-sm">
-              <span className="text-gray-500">Don't have an account?</span>{' '}
-              <Link
-                href="/register"
-                className="text-blue-600 hover:text-blue-500"
-              >
-                Register
-              </Link>
             </div>
           </form>
         </div>

@@ -13,6 +13,9 @@ export interface Attendee {
   eventId: string;
   checkedIn: boolean;
   checkedInAt?: Date;
+  phone?: string;
+  company?: string;
+  jobTitle?: string;
 }
 
 export interface Restaurant {

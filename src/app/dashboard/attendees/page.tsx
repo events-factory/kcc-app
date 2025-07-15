@@ -3,8 +3,9 @@
 import { Button } from '@/components/ui/button';
 import { FiSearch, FiFilter, FiAlertTriangle } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
-import { attendeeService, Attendee } from '@/services/attendee-service';
+import { attendeeService } from '@/services/attendee-service';
 import { eventService, Event } from '@/services/event-service';
+import { Attendee } from '@/types';
 
 export default function AttendeesPage() {
   // State management for attendees and search

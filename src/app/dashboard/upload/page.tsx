@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FiUpload, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
+import {
+  attendeeService,
+  CreateAttendeeData,
+} from '@/services/attendee-service';
 
 // Define type for event data
 type Event = {
@@ -17,28 +21,31 @@ type Event = {
 type PreviewRow = Record<string, string | number | null>;
 
 // Define required fields for attendees
-type RequiredField = 'badgeId' | 'firstName' | 'lastName' | 'email';
+type RequiredField = 'badgeId';
+type OptionalField = 'firstName' | 'lastName' | 'email';
 
-const REQUIRED_FIELDS: RequiredField[] = [
-  'badgeId',
-  'firstName',
-  'lastName',
-  'email',
-];
+const REQUIRED_FIELDS: RequiredField[] = ['badgeId'];
+const OPTIONAL_FIELDS: OptionalField[] = ['firstName', 'lastName', 'email'];
+const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<
     'idle' | 'uploading' | 'success' | 'error'
   >('idle');
+  const [uploadResult, setUploadResult] = useState<{
+    createdCount: number;
+    errorCount: number;
+    errors?: Array<{ row: number; error: string }>;
+  } | null>(null);
   const [previewData, setPreviewData] = useState<PreviewRow[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [fileColumns, setFileColumns] = useState<string[]>([]);
 
-  // Field mapping: key is the required field, value is the column from the file
+  // Field mapping: key is the field name, value is the column from the file
   const [fieldMapping, setFieldMapping] = useState<
-    Record<RequiredField, string>
+    Record<RequiredField | OptionalField, string>
   >({
     badgeId: '',
     firstName: '',
@@ -70,10 +77,8 @@ export default function UploadPage() {
   // Try to automatically map columns based on common names
   const autoMapColumns = (columns: string[]) => {
     const mapping = { ...fieldMapping };
-
     columns.forEach((column) => {
       const lowerColumn = column.toLowerCase();
-
       if (lowerColumn.includes('badge') || lowerColumn.includes('id')) {
         mapping.badgeId = column;
       } else if (
@@ -95,7 +100,6 @@ export default function UploadPage() {
         mapping.email = column;
       }
     });
-
     setFieldMapping(mapping);
   };
 
@@ -228,7 +232,10 @@ export default function UploadPage() {
     reader.readAsBinaryString(file);
   };
 
-  const handleFieldMappingChange = (field: RequiredField, column: string) => {
+  const handleFieldMappingChange = (
+    field: RequiredField | OptionalField,
+    column: string
+  ) => {
     setFieldMapping({
       ...fieldMapping,
       [field]: column,
@@ -259,7 +266,7 @@ export default function UploadPage() {
     setFileColumns([]);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile || !selectedEvent) {
       alert('Please select both an event and a file before uploading');
       return;
@@ -271,12 +278,144 @@ export default function UploadPage() {
     }
 
     setUploadStatus('uploading');
+    setUploadResult(null);
 
-    // Simulating upload with setTimeout
-    // In a real app, you would send the file, event ID, and field mapping to the server
-    setTimeout(() => {
+    try {
+      // Process the entire file (not just preview data)
+      const allData = await processEntireFile(selectedFile);
+
+      // Transform the data according to the field mapping
+      const attendeesData: CreateAttendeeData[] = allData.map((row) => {
+        const attendee: any = {
+          badgeId: String(row[fieldMapping.badgeId] || ''),
+          eventId: selectedEvent,
+        };
+        if (fieldMapping.firstName && row[fieldMapping.firstName])
+          attendee.firstName = String(row[fieldMapping.firstName]);
+        if (fieldMapping.lastName && row[fieldMapping.lastName])
+          attendee.lastName = String(row[fieldMapping.lastName]);
+        if (fieldMapping.email && row[fieldMapping.email])
+          attendee.email = String(row[fieldMapping.email]);
+        if (row['phone'] || row['Phone'] || row['PHONE'])
+          attendee.phone = String(row['phone'] || row['Phone'] || row['PHONE']);
+        if (row['company'] || row['Company'] || row['COMPANY'])
+          attendee.company = String(
+            row['company'] || row['Company'] || row['COMPANY']
+          );
+        if (row['jobTitle'] || row['Job Title'] || row['JOB_TITLE'])
+          attendee.jobTitle = String(
+            row['jobTitle'] || row['Job Title'] || row['JOB_TITLE']
+          );
+        return attendee;
+      });
+
+      // Send data to backend
+      const result = await attendeeService.bulkUploadAttendees({
+        attendeesData,
+        eventId: selectedEvent,
+      });
+
+      setUploadResult({
+        createdCount: result.createdCount,
+        errorCount: result.errorCount,
+        errors: result.errors,
+      });
+
       setUploadStatus('success');
-    }, 1500);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setUploadStatus('error');
+      alert('Upload failed. Please try again.');
+    }
+  };
+
+  // Function to process the entire file (not just preview)
+  const processEntireFile = async (file: File): Promise<PreviewRow[]> => {
+    return new Promise((resolve, reject) => {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileExtension === 'csv') {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const csvText = event.target?.result?.toString();
+            if (!csvText) {
+              reject(new Error('Failed to read CSV file'));
+              return;
+            }
+
+            const lines = csvText
+              .split('\n')
+              .filter((line) => line.trim() !== '');
+            const headers = lines[0].split(',').map((header) => header.trim());
+
+            const data = lines.slice(1).map((line) => {
+              const values = line.split(',').map((value) => value.trim());
+              return headers.reduce<Record<string, string>>(
+                (obj, header, index) => {
+                  obj[header] = values[index] || '';
+                  return obj;
+                },
+                {}
+              );
+            });
+
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+      } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = e.target?.result;
+            if (!data) {
+              reject(new Error('Failed to read Excel file'));
+              return;
+            }
+
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+
+            const jsonData = XLSX.utils.sheet_to_json<
+              Record<string, string | number>
+            >(worksheet, {
+              header: 1,
+              defval: '',
+              blankrows: false,
+            });
+
+            if (jsonData.length > 0) {
+              const headers = Object.values(jsonData[0]).map(String);
+              const rows = jsonData.slice(1).map((row) => {
+                const rowData = Object.values(row);
+                return headers.reduce<Record<string, string | number>>(
+                  (obj, header, index) => {
+                    obj[header] = rowData[index] || '';
+                    return obj;
+                  },
+                  {}
+                );
+              });
+
+              resolve(rows);
+            } else {
+              reject(new Error('No data found in Excel file'));
+            }
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsBinaryString(file);
+      } else {
+        reject(new Error('Unsupported file format'));
+      }
+    });
   };
 
   // Generates a transformed preview with the mapped columns
@@ -286,7 +425,7 @@ export default function UploadPage() {
     return previewData.map((row) => {
       const mappedRow: Record<string, string | number | null> = {};
 
-      REQUIRED_FIELDS.forEach((field) => {
+      ALL_FIELDS.forEach((field) => {
         const sourceColumn = fieldMapping[field];
         mappedRow[field] = sourceColumn ? row[sourceColumn] : null;
       });
@@ -375,7 +514,7 @@ export default function UploadPage() {
       </p>
 
       <div className="space-y-4 mb-8">
-        {REQUIRED_FIELDS.map((field) => (
+        {ALL_FIELDS.map((field) => (
           <div key={field} className="flex items-center">
             <div className="w-1/4">
               <label className="block text-sm font-medium">
@@ -386,7 +525,9 @@ export default function UploadPage() {
                   : field === 'lastName'
                   ? 'Last Name'
                   : 'Email'}
-                <span className="text-red-500">*</span>
+                {REQUIRED_FIELDS.includes(field as RequiredField) && (
+                  <span className="text-red-500">*</span>
+                )}
               </label>
             </div>
 
@@ -500,7 +641,7 @@ export default function UploadPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {REQUIRED_FIELDS.map((field) => (
+                  {ALL_FIELDS.map((field) => (
                     <th
                       key={field}
                       scope="col"
@@ -520,7 +661,7 @@ export default function UploadPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {mappedPreview.map((row, rowIndex) => (
                   <tr key={rowIndex}>
-                    {REQUIRED_FIELDS.map((field, colIndex) => (
+                    {ALL_FIELDS.map((field, colIndex) => (
                       <td
                         key={colIndex}
                         className="px-6 py-4 whitespace-nowrap text-sm"
@@ -549,9 +690,53 @@ export default function UploadPage() {
         </div>
 
         {uploadStatus === 'success' && (
-          <div className="mt-4 flex items-center justify-center text-sm text-green-600 p-3 bg-green-50 rounded-md">
-            <FiCheckCircle className="mr-2" />
-            Upload Successful!
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-center text-sm text-green-600 p-3 bg-green-50 rounded-md">
+              <FiCheckCircle className="mr-2" />
+              Upload Successful!
+            </div>
+
+            {uploadResult && (
+              <div className="bg-gray-50 p-4 rounded-md">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Upload Summary:
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Successfully created:</span>
+                    <span className="ml-2 font-semibold text-green-600">
+                      {uploadResult.createdCount} attendees
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Errors:</span>
+                    <span className="ml-2 font-semibold text-red-600">
+                      {uploadResult.errorCount}
+                    </span>
+                  </div>
+                </div>
+
+                {uploadResult.errors && uploadResult.errors.length > 0 && (
+                  <div className="mt-3">
+                    <h5 className="font-medium text-red-600 mb-2">Errors:</h5>
+                    <div className="bg-red-50 p-3 rounded-md max-h-32 overflow-y-auto">
+                      {uploadResult.errors.map((error, index) => (
+                        <div key={index} className="text-sm text-red-700">
+                          Row {error.row}: {error.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {uploadStatus === 'error' && (
+          <div className="mt-4 flex items-center justify-center text-sm text-red-600 p-3 bg-red-50 rounded-md">
+            <span className="mr-2">❌</span>
+            Upload Failed! Please try again.
           </div>
         )}
       </div>

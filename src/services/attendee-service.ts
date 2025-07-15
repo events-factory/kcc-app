@@ -1,22 +1,32 @@
 import { apiClient } from '@/lib/api-client';
-
-export interface Attendee {
-  id: string;
-  badgeId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  eventId: string;
-  checkedIn: boolean;
-  checkedInAt?: Date;
-}
+import { Attendee } from '@/types';
 
 export interface CreateAttendeeData {
   badgeId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   eventId: string;
+  phone?: string;
+  company?: string;
+  jobTitle?: string;
+}
+
+export interface BulkUploadData {
+  attendeesData: CreateAttendeeData[];
+  eventId: string;
+}
+
+export interface BulkUploadResponse {
+  success: boolean;
+  message: string;
+  createdCount: number;
+  errorCount: number;
+  errors?: Array<{
+    row: number;
+    error: string;
+  }>;
+  createdAttendees: Attendee[];
 }
 
 export interface CheckInData {
@@ -104,7 +114,57 @@ export const attendeeService = {
    */
   async getRecentCheckIns(eventId: string): Promise<RecentCheckIn[]> {
     return apiClient.get<RecentCheckIn[]>(
-      `/attendees/event/${eventId}/recent-check-ins`
+      `/attendees/event/${eventId}/recent-check-ins?limit=10`
     );
+  },
+
+  /**
+   * Bulk upload attendees (registers multiple attendees individually)
+   * @param data Bulk upload data
+   */
+  async bulkUploadAttendees(data: BulkUploadData): Promise<BulkUploadResponse> {
+    const { attendeesData, eventId } = data;
+    const createdAttendees: Attendee[] = [];
+    const errors: Array<{ row: number; error: string }> = [];
+
+    // Register each attendee individually since backend doesn't support bulk upload
+    for (let i = 0; i < attendeesData.length; i++) {
+      const attendeeData = attendeesData[i];
+      try {
+        // Map the data to match backend expectations
+        const backendData = {
+          badgeId: attendeeData.badgeId,
+          firstName: attendeeData.firstName || '',
+          lastName: attendeeData.lastName || '',
+          email: attendeeData.email || '',
+          eventId: parseInt(eventId), // Backend expects number based on the screenshot
+          phone: attendeeData.phone || '',
+          organization: attendeeData.company || '', // Backend expects 'organization', not 'company'
+        };
+
+        const createdAttendee = await apiClient.post<Attendee>(
+          '/attendees/register',
+          backendData
+        );
+        createdAttendees.push(createdAttendee);
+      } catch (error) {
+        errors.push({
+          row: i + 1,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to register attendee',
+        });
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      message: `Successfully registered ${createdAttendees.length} attendees`,
+      createdCount: createdAttendees.length,
+      errorCount: errors.length,
+      errors: errors.length > 0 ? errors : undefined,
+      createdAttendees,
+    };
   },
 };
