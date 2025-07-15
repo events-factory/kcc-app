@@ -101,7 +101,10 @@ export default function UploadPage() {
               lowerHeader === 'badgeid'
             ) {
               autoMapping.badgeId = header;
-            } else if (lowerHeader.includes('first') || lowerHeader === 'firstname') {
+            } else if (
+              lowerHeader.includes('first') ||
+              lowerHeader === 'firstname'
+            ) {
               autoMapping.firstName = header;
             } else if (
               lowerHeader.includes('last') ||
