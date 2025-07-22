@@ -1,64 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authMiddleware } from '../../_middleware';
+import { Attendee } from '@/types';
 
 // Reference to the mock attendees array
 // In a real app, this would be a database query
-let attendees = [
-  {
-    id: '1',
-    badgeId: 'B12345',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    eventId: '1',
-    checkedIn: true,
-    checkedInAt: new Date(Date.now() - 120 * 60000),
-  },
-  {
-    id: '2',
-    badgeId: 'B12346',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    email: 'jane.smith@example.com',
-    eventId: '1',
-    checkedIn: true,
-    checkedInAt: new Date(Date.now() - 90 * 60000),
-  },
-  {
-    id: '3',
-    badgeId: 'B12347',
-    firstName: 'Robert',
-    lastName: 'Johnson',
-    email: 'robert@example.com',
-    eventId: '1',
-    checkedIn: false,
-  },
-];
+let attendees = [];
 
 // Mock entrance data
-const entrances = [
-  {
-    id: '1',
-    name: 'Main Entrance',
-    eventId: '1',
-    scanCount: 67,
-    lastScanTime: new Date(Date.now() - 5 * 60000),
-  },
-  {
-    id: '2',
-    name: 'VIP Entrance',
-    eventId: '1',
-    scanCount: 23,
-    lastScanTime: new Date(Date.now() - 15 * 60000),
-  },
-  {
-    id: '3',
-    name: 'Staff Entrance',
-    eventId: '1',
-    scanCount: 15,
-    lastScanTime: new Date(Date.now() - 30 * 60000),
-  },
-];
+const entrances = [];
 
 // Check in an attendee (protected)
 export async function POST(req: NextRequest) {
@@ -88,11 +37,19 @@ export async function POST(req: NextRequest) {
 
       const attendee = attendees[attendeeIndex];
 
+      // Find entrance name if entranceId is provided
+      let entranceName = undefined;
+      if (entranceId) {
+        const entrance = entrances.find((e) => e.id === entranceId);
+        entranceName = entrance?.name;
+      }
+
       // Update attendee check-in status
       const updatedAttendee = {
         ...attendee,
         checkedIn: true,
         checkedInAt: new Date(),
+        entrance: entranceName,
       };
 
       attendees[attendeeIndex] = updatedAttendee;

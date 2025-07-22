@@ -3,37 +3,7 @@ import { authMiddleware } from '../_middleware';
 import { Attendee } from '@/types';
 
 // Mock attendee data
-const attendees: Attendee[] = [
-  {
-    id: '1',
-    badgeId: 'B12345',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    eventId: '1', // Annual Conference 2025
-    checkedIn: true,
-    checkedInAt: new Date(Date.now() - 120 * 60000),
-  },
-  {
-    id: '2',
-    badgeId: 'B12346',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    email: 'jane.smith@example.com',
-    eventId: '1', // Annual Conference 2025
-    checkedIn: true,
-    checkedInAt: new Date(Date.now() - 90 * 60000),
-  },
-  {
-    id: '3',
-    badgeId: 'B12347',
-    firstName: 'Robert',
-    lastName: 'Johnson',
-    email: 'robert@example.com',
-    eventId: '1', // Annual Conference 2025
-    checkedIn: false,
-  },
-];
+const attendees: Attendee[] = [];
 
 // GET all attendees (protected)
 export async function GET(req: NextRequest) {

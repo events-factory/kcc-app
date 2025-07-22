@@ -3,25 +3,9 @@ import { authMiddleware } from '../../_middleware';
 
 // Reference to the mock events data from the parent route
 // In a real app, this would be a database query
+// eslint-disable-next-line prefer-const
 let events = [
-  {
-    id: '1',
-    name: 'Annual Conference 2025',
-    attendeeLimit: 150,
-    registered: 120,
-    date: '2025-06-15',
-    location: 'Convention Center',
-    description: 'Our flagship annual conference',
-  },
-  {
-    id: '2',
-    name: 'Tech Summit',
-    attendeeLimit: 100,
-    registered: 85,
-    date: '2025-08-20',
-    location: 'Tech Hub',
-    description: 'Technology summit for industry leaders',
-  },
+  
 ];
 
 // GET a specific event by ID
@@ -92,7 +76,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return authMiddleware(req, async (request) => {
+  return authMiddleware(req, async () => {
     try {
       const resolvedParams = await params;
       const eventId = resolvedParams.id;

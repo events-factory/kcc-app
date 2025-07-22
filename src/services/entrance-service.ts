@@ -6,16 +6,19 @@ export interface Entrance {
   eventId: string;
   scanCount: number;
   lastScanTime?: Date;
+  maxCapacity?: number;
 }
 
 export interface CreateEntranceData {
   name: string;
   eventId: string;
+  maxCapacity?: number;
 }
 
 export interface UpdateEntranceData {
   name?: string;
   eventId?: string;
+  maxCapacity?: number;
 }
 
 export interface EntranceStats {
@@ -104,11 +107,17 @@ export const entranceService = {
       }
 
       return [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch entrance stats:', error);
 
       // Special handling for authentication errors
-      if (error?.message?.includes('Authentication required')) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof error.message === 'string' &&
+        error.message.includes('Authentication required')
+      ) {
         console.warn(
           'Authentication issue detected, attempting to refresh token status'
         );
