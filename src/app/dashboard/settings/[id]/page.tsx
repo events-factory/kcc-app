@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editEntrance, setEditEntrance] = useState<Entrance | null>(null);
   const [name, setName] = useState('');
+  const [maxCapacity, setMaxCapacity] = useState<number | ''>('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentEvent, setCurrentEvent] = useState<Event | null>(null);
@@ -89,9 +90,11 @@ export default function SettingsPage() {
     if (entrance) {
       setEditEntrance(entrance);
       setName(entrance.name);
+      setMaxCapacity(entrance.maxCapacity ?? '');
     } else {
       setEditEntrance(null);
       setName('');
+      setMaxCapacity('');
     }
     setModalOpen(true);
   };
@@ -100,6 +103,7 @@ export default function SettingsPage() {
     setModalOpen(false);
     setEditEntrance(null);
     setName('');
+    setMaxCapacity('');
     setError(null);
   };
 
@@ -113,18 +117,18 @@ export default function SettingsPage() {
     setError(null);
 
     try {
+      const entranceData = {
+        name: name.trim(),
+        eventId: eventId,
+        ...(maxCapacity !== '' && { maxCapacity: Number(maxCapacity) }),
+      };
+
       if (editEntrance) {
         // Update existing entrance
-        await entranceService.updateEntrance(editEntrance.id, {
-          name: name.trim(),
-          eventId: eventId,
-        });
+        await entranceService.updateEntrance(editEntrance.id, entranceData);
       } else {
         // Create new entrance
-        await entranceService.createEntrance({
-          name: name.trim(),
-          eventId: eventId,
-        });
+        await entranceService.createEntrance(entranceData);
       }
       await fetchEntrances();
       handleCloseModal();
@@ -220,6 +224,9 @@ export default function SettingsPage() {
                     Entrance Name
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                    Max Capacity
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
                     ID
                   </th>
                   <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
@@ -232,6 +239,11 @@ export default function SettingsPage() {
                   <tr key={entrance.id}>
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                       {entrance.name}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                      {entrance.maxCapacity
+                        ? entrance.maxCapacity.toLocaleString()
+                        : 'No limit'}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                       {entrance.id}
@@ -288,6 +300,31 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="e.g., Main Entrance, VIP Entrance"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="max-capacity"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Max Capacity (optional)
+            </label>
+            <input
+              type="number"
+              id="max-capacity"
+              value={maxCapacity}
+              onChange={(e) =>
+                setMaxCapacity(
+                  e.target.value === '' ? '' : Number(e.target.value)
+                )
+              }
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="e.g., 100, 500"
+              min="1"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Leave empty for no capacity limit
+            </p>
           </div>
 
           {error && (
