@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authMiddleware } from '../_middleware';
 
 // Mock event data
+// eslint-disable-next-line prefer-const
 let events = [
   {
     id: '1',
-    name: 'Annual Conference 2025',
+    name: 'KCC Developer Workshop',
     attendeeLimit: 150,
     registered: 120,
     date: '2025-06-15',
@@ -24,7 +25,7 @@ let events = [
 ];
 
 // GET all events
-export async function GET(request: NextRequest) {
+export async function GET() {
   // No authentication required for GET /events
   return NextResponse.json(events);
 }
