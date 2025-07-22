@@ -13,6 +13,7 @@ export interface Attendee {
   eventId: string;
   checkedIn: boolean;
   checkedInAt?: Date;
+  entrance?: string;
   phone?: string;
   company?: string;
   jobTitle?: string;
