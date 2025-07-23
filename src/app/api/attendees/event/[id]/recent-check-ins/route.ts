@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authMiddleware } from '../../../../_middleware';
+import { Attendee } from '@/types';
 
 // Reference to the mock attendees array
 // In a real app, this would be a database query
-let attendees = [];
+const attendees: Attendee[] = [];
 
 // GET recent check-ins for an event
 export async function GET(
