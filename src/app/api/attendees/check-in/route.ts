@@ -4,10 +4,16 @@ import { Attendee } from '@/types';
 
 // Reference to the mock attendees array
 // In a real app, this would be a database query
-let attendees = [];
+const attendees: Attendee[] = [];
 
 // Mock entrance data
-const entrances = [];
+const entrances: Array<{
+  id: string;
+  name: string;
+  eventId: string;
+  scanCount: number;
+  lastScanTime?: Date;
+}> = [];
 
 // Check in an attendee (protected)
 export async function POST(req: NextRequest) {

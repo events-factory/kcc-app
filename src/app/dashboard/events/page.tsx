@@ -170,7 +170,7 @@ export default function EventsPage() {
                       {event.attendeeLimit}
                     </td>
                     <td className="whitespace-nowrap px-4 py-4 text-sm">
-                      {event.registeredCount || 0}
+                      {event.registered || 0}
                     </td>
                     <td className="whitespace-nowrap px-4 py-4 text-sm">
                       <div className="flex gap-2">

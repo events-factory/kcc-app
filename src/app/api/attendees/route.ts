@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const createdAttendees = [];
-      const errors = [];
+      const createdAttendees: Attendee[] = [];
+      const errors: Array<{ row: number; error: string }> = [];
 
       // Process each attendee
       for (let i = 0; i < attendeesData.length; i++) {

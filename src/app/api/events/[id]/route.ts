@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authMiddleware } from '../../_middleware';
+import { Event } from '@/types';
 
 // Reference to the mock events data from the parent route
 // In a real app, this would be a database query
-// eslint-disable-next-line prefer-const
-let events = [
-  
-];
+const events: Event[] = [];
 
 // GET a specific event by ID
 export async function GET(
